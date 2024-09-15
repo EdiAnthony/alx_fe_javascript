@@ -1,4 +1,5 @@
-const quotes = [
+// Initialize quotes from local storage or use default
+const quotes = JSON.parse(localStorage.getItem('quotes')) || [
     { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
     { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
     { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", category: "Success" },
@@ -17,11 +18,43 @@ function showRandomQuote() {
     document.getElementById('quoteDisplay').innerText = `${quote.text} - ${quote.category}`;
 }
 
+
+function importFromJsonFile(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const fileReader = new FileReader();
+        fileReader.onload = function(event) {
+            const importedQuotes = JSON.parse(event.target.result);
+            if (Array.isArray(importedQuotes)) {
+                quotes.push(...importedQuotes);
+                localStorage.setItem('quotes', JSON.stringify(quotes));
+                alert('Quotes imported successfully!');
+            } else {
+                alert('Invalid file format.');
+            }
+        };
+        fileReader.readAsText(file);
+    }
+}
+
+
+function exportToJsonFile() {
+    const dataStr = JSON.stringify(quotes, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quotes.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 function addQuote() {
     const newQuoteText = document.getElementById('newQuoteText').value;
     const newQuoteCategory = document.getElementById('newQuoteCategory').value;
     if (newQuoteText && newQuoteCategory) {
         quotes.push({ text: newQuoteText, category: newQuoteCategory });
+        localStorage.setItem('quotes', JSON.stringify(quotes));
         document.getElementById('newQuoteText').value = '';
         document.getElementById('newQuoteCategory').value = '';
         alert('Quote added successfully!');
@@ -32,3 +65,4 @@ function addQuote() {
 
 document.getElementById('newQuote').addEventListener('click', showRandomQuote);
 document.getElementById('addQuote').addEventListener('click', addQuote);
+document.getElementById('importFile').addEventListener('change', importFromJsonFile);
